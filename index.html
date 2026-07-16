@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Add Your Name</title>
+<style>
+  :root{
+    --ink:#1c1b19;
+    --paper:#faf8f4;
+    --line:#dedad2;
+    --accent:#14532d;
+    --accent-soft:#e7ede9;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:'Georgia', 'Iowan Old Style', serif;
+    background:var(--paper);
+    color:var(--ink);
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:32px 16px 64px;
+  }
+  h1{
+    font-size:1.5rem;
+    font-weight:600;
+    letter-spacing:0.01em;
+    margin:0 0 4px;
+  }
+  .sub{
+    font-family:Helvetica, Arial, sans-serif;
+    font-size:0.85rem;
+    color:#6b675f;
+    margin:0 0 28px;
+  }
+  .layout{
+    display:flex;
+    gap:28px;
+    width:100%;
+    max-width:980px;
+    align-items:flex-start;
+    flex-wrap:wrap;
+    justify-content:center;
+  }
+  .stage{
+    flex:1 1 520px;
+    max-width:640px;
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:6px;
+    padding:16px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:14px;
+  }
+  #canvasWrap{
+    width:100%;
+    position:relative;
+    overflow:hidden;
+    border-radius:3px;
+    background:#fff;
+  }
+  canvas{
+    display:block;
+    width:100%;
+    height:auto;
+    cursor:grab;
+    touch-action:none;
+  }
+  canvas.dragging{cursor:grabbing;}
+  #loading{
+    font-family:Helvetica, Arial, sans-serif;
+    font-size:0.85rem;
+    color:#8a867c;
+    padding:60px 0;
+  }
+  #errorMsg{
+    font-family:Helvetica, Arial, sans-serif;
+    font-size:0.85rem;
+    color:#b3392c;
+    padding:60px 0;
+    text-align:center;
+    display:none;
+  }
+  .panel{
+    flex:0 0 260px;
+    display:flex;
+    flex-direction:column;
+    gap:16px;
+    font-family:Helvetica, Arial, sans-serif;
+  }
+  .field label{
+    display:block;
+    font-size:0.72rem;
+    text-transform:uppercase;
+    letter-spacing:0.08em;
+    color:#847f74;
+    margin-bottom:6px;
+  }
+  .field input[type=text]{
+    width:100%;
+    padding:9px 10px;
+    border:1px solid var(--line);
+    border-radius:4px;
+    font-size:0.95rem;
+    font-family:'Georgia', serif;
+    background:#fff;
+  }
+  .row{display:flex; gap:10px;}
+  .row .field{flex:1;}
+  input[type=range]{width:100%;}
+  input[type=color]{
+    width:100%;
+    height:34px;
+    border:1px solid var(--line);
+    border-radius:4px;
+    padding:2px;
+    background:#fff;
+  }
+  select{
+    width:100%;
+    padding:8px 10px;
+    border:1px solid var(--line);
+    border-radius:4px;
+    background:#fff;
+    font-family:'Georgia', serif;
+    font-size:0.9rem;
+  }
+  .hint{
+    font-size:0.75rem;
+    color:#8a867c;
+    line-height:1.4;
+  }
+  button{
+    font-family:Helvetica, Arial, sans-serif;
+    font-size:0.85rem;
+    font-weight:600;
+    letter-spacing:0.02em;
+    padding:11px 14px;
+    border-radius:4px;
+    border:1px solid var(--accent);
+    cursor:pointer;
+    transition:opacity .15s ease;
+  }
+  button:disabled{opacity:0.4; cursor:not-allowed;}
+  #downloadBtn{
+    background:var(--accent);
+    color:#fff;
+  }
+  #downloadBtn:hover:not(:disabled){opacity:0.9;}
+</style>
+</head>
+<body>
+
+<h1>Add Your Name</h1>
+<p class="sub">Type your name, drag it into place, then download.</p>
+
+<div class="layout">
+  <div class="stage">
+    <div id="canvasWrap">
+      <div id="loading">Loading photo…</div>
+      <div id="errorMsg">Couldn't load "photo.jpg". Make sure a file named exactly <strong>photo.jpg</strong> is in the same folder as this page.</div>
+      <canvas id="canvas" style="display:none;"></canvas>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="field">
+      <label for="nameInput">Name / text</label>
+      <input type="text" id="nameInput" placeholder="e.g. Alex Rivera" value="Your Name">
+    </div>
+
+    <div class="field">
+      <label for="fontSelect">Font</label>
+      <select id="fontSelect">
+        <option value="Georgia, serif">Georgia</option>
+        <option value="'Helvetica Neue', Arial, sans-serif">Helvetica</option>
+        <option value="'Brush Script MT', cursive">Script</option>
+        <option value="'Courier New', monospace">Typewriter</option>
+        <option value="'Trebuchet MS', sans-serif">Trebuchet</option>
+      </select>
+    </div>
+
+    <div class="row">
+      <div class="field">
+        <label for="sizeRange">Size</label>
+        <input type="range" id="sizeRange" min="10" max="200" value="48">
+      </div>
+      <div class="field">
+        <label for="colorInput">Color</label>
+        <input type="color" id="colorInput" value="#14532d">
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="field">
+        <label for="opacityRange">Opacity</label>
+        <input type="range" id="opacityRange" min="10" max="100" value="100">
+      </div>
+      <div class="field">
+        <label for="rotateRange">Rotate</label>
+        <input type="range" id="rotateRange" min="-45" max="45" value="0">
+      </div>
+    </div>
+
+    <p class="hint">Drag the text directly on the photo to position it. Everything runs in your browser — nothing is uploaded anywhere.</p>
+
+    <button id="downloadBtn" disabled>Download image</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  const canvasWrap = document.getElementById('canvasWrap');
+  const canvas = document.getElementById('canvas');
+  const ctx = canvas.getContext('2d');
+  const loadingEl = document.getElementById('loading');
+  const errorEl = document.getElementById('errorMsg');
+  const nameInput = document.getElementById('nameInput');
+  const fontSelect = document.getElementById('fontSelect');
+  const sizeRange = document.getElementById('sizeRange');
+  const colorInput = document.getElementById('colorInput');
+  const opacityRange = document.getElementById('opacityRange');
+  const rotateRange = document.getElementById('rotateRange');
+  const downloadBtn = document.getElementById('downloadBtn');
+
+  let img = null;
+  let textPos = null; // {x, y} in canvas pixel coords
+  let dragging = false;
+  let dragOffset = {x:0, y:0};
+
+  // ---- Load the fixed photo from disk (change photo.jpg to update it) ----
+  const image = new Image();
+  image.onload = () => {
+    img = image;
+    setupCanvas();
+    loadingEl.style.display = 'none';
+    canvas.style.display = 'block';
+    downloadBtn.disabled = false;
+  };
+  image.onerror = () => {
+    loadingEl.style.display = 'none';
+    errorEl.style.display = 'block';
+  };
+  image.src = 'photo.jpg?v=' + Date.now(); // cache-bust so updates show immediately
+
+  function setupCanvas(){
+    const maxW = 900;
+    let w = img.width, h = img.height;
+    if(w > maxW){
+      h = h * (maxW / w);
+      w = maxW;
+    }
+    canvas.width = w;
+    canvas.height = h;
+    textPos = {x: w/2, y: h/2};
+    draw();
+  }
+
+  function currentFont(){
+    return `${sizeRange.value}px ${fontSelect.value}`;
+  }
+
+  function draw(){
+    if(!img) return;
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+    const text = nameInput.value || '';
+    if(text && textPos){
+      ctx.save();
+      ctx.globalAlpha = opacityRange.value / 100;
+      ctx.font = currentFont();
+      ctx.fillStyle = colorInput.value;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.translate(textPos.x, textPos.y);
+      ctx.rotate(rotateRange.value * Math.PI / 180);
+      ctx.shadowColor = 'rgba(0,0,0,0.25)';
+      ctx.shadowBlur = 3;
+      ctx.fillText(text, 0, 0);
+      ctx.restore();
+    }
+  }
+
+  function canvasPointFromEvent(e){
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    return {
+      x: (clientX - rect.left) * scaleX,
+      y: (clientY - rect.top) * scaleY
+    };
+  }
+
+  function isNearText(pt){
+    if(!textPos) return false;
+    const dx = pt.x - textPos.x;
+    const dy = pt.y - textPos.y;
+    const r = parseInt(sizeRange.value, 10) * 1.5;
+    return Math.sqrt(dx*dx + dy*dy) < r;
+  }
+
+  function startDrag(e){
+    const pt = canvasPointFromEvent(e);
+    if(isNearText(pt)){
+      dragging = true;
+      dragOffset.x = pt.x - textPos.x;
+      dragOffset.y = pt.y - textPos.y;
+      canvas.classList.add('dragging');
+    }
+  }
+  function moveDrag(e){
+    if(!dragging) return;
+    e.preventDefault();
+    const pt = canvasPointFromEvent(e);
+    textPos.x = pt.x - dragOffset.x;
+    textPos.y = pt.y - dragOffset.y;
+    draw();
+  }
+  function endDrag(){
+    dragging = false;
+    canvas.classList.remove('dragging');
+  }
+
+  canvas.addEventListener('mousedown', startDrag);
+  canvas.addEventListener('mousemove', moveDrag);
+  window.addEventListener('mouseup', endDrag);
+
+  canvas.addEventListener('touchstart', startDrag, {passive:true});
+  canvas.addEventListener('touchmove', moveDrag, {passive:false});
+  window.addEventListener('touchend', endDrag);
+
+  [nameInput, fontSelect, sizeRange, colorInput, opacityRange, rotateRange].forEach(el => {
+    el.addEventListener('input', draw);
+  });
+
+  downloadBtn.addEventListener('click', () => {
+    const link = document.createElement('a');
+    link.download = 'photo-with-name.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  });
+})();
+</script>
+
+</body>
+</html>
